@@ -105,36 +105,67 @@ public class OdpsReader extends Reader {
 
             if (isPartitionedTable) {
                 // 分区表，需要配置分区
+//                if (null == userConfiguredPartitions || userConfiguredPartitions.isEmpty()) {
+//                    throw DataXException.asDataXException(OdpsReaderErrorCode.PARTITION_ERROR,
+//                            String.format("分区信息没有配置.由于源头表:%s 为分区表, 所以您需要配置其抽取的表的分区信息. 格式形如:pt=hello,ds=hangzhou，请您参考此格式修改该配置项.",
+//                                    table.getName()));
+//                } else {
+//                    List<String> allPartitions = OdpsUtil.getTableAllPartitions(table);
+//
+//                    if (null == allPartitions || allPartitions.isEmpty()) {
+//                        throw DataXException.asDataXException(OdpsReaderErrorCode.PARTITION_ERROR,
+//                                String.format("分区信息配置错误.源头表:%s 虽然为分区表, 但其实际分区值并不存在. 请确认源头表已经生成该分区，再进行数据抽取.",
+//                                        table.getName()));
+//                    }
+//
+//                    List<String> parsedPartitions = expandUserConfiguredPartition(
+//                            allPartitions, userConfiguredPartitions);
+//
+//                    if (null == parsedPartitions || parsedPartitions.isEmpty()) {
+//                        throw DataXException.asDataXException(
+//                                OdpsReaderErrorCode.PARTITION_ERROR,
+//                                String.format(
+//                                        "分区配置错误，根据您所配置的分区没有匹配到源头表中的分区. 源头表所有分区是:[\n%s\n], 您配置的分区是:[\n%s\n]. 请您根据实际情况在作出修改. ",
+//                                        StringUtils.join(allPartitions, "\n"),
+//                                        StringUtils.join(userConfiguredPartitions, "\n")));
+//                    }
+//                    this.originalConfig.set(Key.PARTITION, parsedPartitions);
+//
+//                    for (Column column : table.getSchema()
+//                            .getPartitionColumns()) {
+//                        partitionColumns.add(column.getName());
+//                    }
+//                }
                 if (null == userConfiguredPartitions || userConfiguredPartitions.isEmpty()) {
+//                    throw DataXException.asDataXException(OdpsReaderErrorCode.PARTITION_ERROR,
+//                            String.format("分区信息没有配置.由于源头表:%s 为分区表, 所以您需要配置其抽取的表的分区信息. 格式形如:pt=hello,ds=hangzhou，请您参考此格式修改该配置项.",
+//                                    table.getName()));
+                    userConfiguredPartitions.add("*");
+                }
+                List<String> allPartitions = OdpsUtil.getTableAllPartitions(table);
+
+                if (null == allPartitions || allPartitions.isEmpty()) {
                     throw DataXException.asDataXException(OdpsReaderErrorCode.PARTITION_ERROR,
-                            String.format("分区信息没有配置.由于源头表:%s 为分区表, 所以您需要配置其抽取的表的分区信息. 格式形如:pt=hello,ds=hangzhou，请您参考此格式修改该配置项.",
+                            String.format("分区信息配置错误.源头表:%s 虽然为分区表, 但其实际分区值并不存在. 请确认源头表已经生成该分区，再进行数据抽取.",
                                     table.getName()));
-                } else {
-                    List<String> allPartitions = OdpsUtil.getTableAllPartitions(table);
+                }
 
-                    if (null == allPartitions || allPartitions.isEmpty()) {
-                        throw DataXException.asDataXException(OdpsReaderErrorCode.PARTITION_ERROR,
-                                String.format("分区信息配置错误.源头表:%s 虽然为分区表, 但其实际分区值并不存在. 请确认源头表已经生成该分区，再进行数据抽取.",
-                                        table.getName()));
-                    }
-
-                    List<String> parsedPartitions = expandUserConfiguredPartition(
+                List<String> parsedPartitions = expandUserConfiguredPartition(
                             allPartitions, userConfiguredPartitions);
 
-                    if (null == parsedPartitions || parsedPartitions.isEmpty()) {
-                        throw DataXException.asDataXException(
-                                OdpsReaderErrorCode.PARTITION_ERROR,
-                                String.format(
-                                        "分区配置错误，根据您所配置的分区没有匹配到源头表中的分区. 源头表所有分区是:[\n%s\n], 您配置的分区是:[\n%s\n]. 请您根据实际情况在作出修改. ",
-                                        StringUtils.join(allPartitions, "\n"),
-                                        StringUtils.join(userConfiguredPartitions, "\n")));
-                    }
-                    this.originalConfig.set(Key.PARTITION, parsedPartitions);
+                if (null == parsedPartitions || parsedPartitions.isEmpty()) {
+                    throw DataXException.asDataXException(
+                            OdpsReaderErrorCode.PARTITION_ERROR,
+                            String.format(
+                                    "分区配置错误，根据您所配置的分区没有匹配到源头表中的分区. 源头表所有分区是:[\n%s\n], 您配置的分区是:[\n%s\n]. 请您根据实际情况在作出修改. ",
+                                    StringUtils.join(allPartitions, "\n"),
+                                    StringUtils.join(userConfiguredPartitions, "\n")));
+                }
+                this.originalConfig.set(Key.PARTITION, parsedPartitions);
 
-                    for (Column column : table.getSchema()
-                            .getPartitionColumns()) {
-                        partitionColumns.add(column.getName());
-                    }
+                for (Column column : table.getSchema()
+                        .getPartitionColumns()) {
+                    partitionColumns.add(column.getName());
                 }
             } else {
                 // 非分区表，则不能配置分区
